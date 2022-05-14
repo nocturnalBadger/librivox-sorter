@@ -69,7 +69,7 @@ func GetLibrivoxFeed(feedID int) (*etree.Document, error) {
 }
 
 func SortFeedItems(feed *etree.Document) {
-	startTime := time.Now().AddDate(-10, 0, 0)
+	startTime := time.Date(2009, time.November, 10, 23, 0, 0, 0, time.UTC)
 	for i, t := range feed.FindElements("//item") {
 		newChildren := make([]etree.Token, 0, len(t.Child))
 		for _, c := range t.Child {
@@ -89,6 +89,7 @@ func SortFeedItems(feed *etree.Document) {
 		t.Child = newChildren
 		pubDate := t.CreateElement("pubDate")
 		time := startTime.Add(time.Hour * time.Duration(i * 24))
-		pubDate.SetText(time.Format("2006-01-02 15:04:05.000000"))
+		const dateFmt = "Mon, 02 Jan 2006 15:04:05 -0700"
+		pubDate.SetText(time.Format(dateFmt))
 	}
 }
