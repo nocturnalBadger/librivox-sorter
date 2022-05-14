@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"time"
+	"reflect"
 	"github.com/beevik/etree"
 	"github.com/go-chi/chi/v5"
 	"io/ioutil"
@@ -70,6 +71,22 @@ func GetLibrivoxFeed(feedID int) (*etree.Document, error) {
 func SortFeedItems(feed *etree.Document) {
 	startTime := time.Now()
 	for i, t := range feed.FindElements("//item") {
+		newChildren := make([]etree.Token, 0, len(t.Child))
+		for _, c := range t.Child {
+			
+			st := reflect.TypeOf(c)
+			fmt.Println(st)
+			
+			if st == reflect.TypeOf(&etree.Comment{}) {
+				fmt.Println("it's a comment!")
+				continue
+			}
+			
+			
+			newChildren = append(newChildren, c)
+			fmt.Printf("%+v\n", c)
+		}
+		t.Child = newChildren
 		pubDate := t.CreateElement("pubDate")
 		time := startTime.Add(time.Minute * time.Duration(i))
 		pubDate.SetText(time.Format("2006-01-02 15:04:05.000000"))
