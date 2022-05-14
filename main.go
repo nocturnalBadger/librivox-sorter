@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"time"
 	"github.com/beevik/etree"
 	"github.com/go-chi/chi/v5"
 	"io/ioutil"
@@ -16,7 +17,6 @@ func main() {
 	r := chi.NewRouter()
 	r.Get("/rss/{id}", GetRSSFeed)
 
-    fmt.Println("I am alive!")
 	http.ListenAndServe(":3333", r)
 }
 
@@ -28,23 +28,24 @@ func GetRSSFeed(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
-	fmt.Println("i am a teapot")
 
 	fmt.Println(idInt)
 	feed, err := GetLibrivoxFeed(idInt)
 	if err != nil {
+		fmt.Println(err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
 
 	fmt.Println(feed.Root())
 	SortFeedItems(feed)
+
+	feed.WriteTo(w)
 }
 
 func GetLibrivoxFeed(feedID int) (*etree.Document, error) {
 	url := fmt.Sprintf("%s%d", librivoxFeedURL, feedID)
 	fmt.Println(url)
-	fmt.Println("i am a teapot")
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, err
@@ -56,10 +57,6 @@ func GetLibrivoxFeed(feedID int) (*etree.Document, error) {
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("i am a teapot")
-
-	fmt.Println(resp)
-	fmt.Println(string(body))
 
 	doc := etree.NewDocument()
 	err = doc.ReadFromBytes(body)
@@ -71,7 +68,10 @@ func GetLibrivoxFeed(feedID int) (*etree.Document, error) {
 }
 
 func SortFeedItems(feed *etree.Document) {
-	for _, t := range feed.FindElements("//item") {
-		fmt.Println("Title:", t.Text())
+	startTime := time.Now()
+	for i, t := range feed.FindElements("//item") {
+		pubDate := t.CreateElement("pubDate")
+		time := startTime.Add(time.Minute * time.Duration(i))
+		pubDate.SetText(time.Format("2006-01-02 15:04:05.000000"))
 	}
 }
