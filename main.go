@@ -88,7 +88,7 @@ func SortFeedItems(feed *etree.Document) {
 		}
 		t.Child = newChildren
 		pubDate := t.CreateElement("pubDate")
-		time := startTime.Add(time.Minute * time.Duration(i))
+		time := startTime.Add(time.Hour * time.Duration(i * 24))
 		pubDate.SetText(time.Format("2006-01-02 15:04:05.000000"))
 	}
 }
